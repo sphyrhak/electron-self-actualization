@@ -1,7 +1,15 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+
+import { autoUpdater } from 'electron-updater';
+import log from 'electron-log';
+
 import icon from '../../resources/icon.png?asset'
+
+
+log.transports.file.level = 'info';
+autoUpdater.logger = log;  // Configura el log para usar electron-log
 
 function createWindow(): void {
   // Create the browser window.
@@ -33,6 +41,9 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  // Verificar actualizaciones
+  autoUpdater.checkForUpdatesAndNotify();
 }
 
 // This method will be called when Electron has finished
@@ -59,6 +70,18 @@ app.whenReady().then(() => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+
+  autoUpdater.on('update-available', () => {
+    log.info('Actualización disponible. Descargando...');
+  });
+
+  autoUpdater.on('update-downloaded', () => {
+    log.info('Actualización descargada. Instalando...');
+    autoUpdater.quitAndInstall();
+  });
+
+
+
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
